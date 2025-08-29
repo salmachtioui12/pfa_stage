@@ -80,7 +80,7 @@ async function syncAmbulances(hopital) {
         {
           type: amb.type,
           position: hopital.position,
-          etat: "disponible",
+         
           hopitalId: hopital._id
         },
         { upsert: true }

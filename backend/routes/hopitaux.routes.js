@@ -69,9 +69,23 @@ router.put('/:id', async (req, res) => {
     hopital.adresse = req.body.adresse;
     hopital.region = req.body.region;
     hopital.position = req.body.position;
-    hopital.ambulances = req.body.ambulances;
+    hopital.osmId=req.body.osmId;
+  
     hopital.profilVerifie = req.body.profilVerifie ?? hopital.profilVerifie;
 
+     // 🚑 Fusion des ambulances
+    if (Array.isArray(req.body.ambulances)) {
+      const existantes = hopital.ambulances || [];
+
+      const fusion = req.body.ambulances.map(newAmb => {
+        const deja = existantes.find(a => a.id === newAmb.id);
+        console.log("iddddddddddd",newAmb.id)
+        
+        return deja ? deja : newAmb; // ⚠️ garde l’ancienne si elle existe
+      });
+
+      hopital.ambulances = fusion;
+    }
     // Contact
     hopital.contact = {
       telephoneUrgence: req.body.contact?.telephoneUrgence || "",
@@ -167,16 +181,19 @@ router.get('/profil/:id', async (req, res) => {
 router.get('/profil/by-email/:email', async (req, res) => {
   try {
     const emailRecherche = req.params.email;
-    const hopital = await Hopital.findOne({ "contact.email": emailRecherche });
+    const hopital = await Hopital.findOne({ "contact.email": { $regex: new RegExp(`^${emailRecherche}$`, 'i') } });
+
     if (!hopital) {
       return res.status(404).json({ message: "Hôpital non trouvé pour cet email" });
     }
+
     res.json(hopital);
   } catch (err) {
     console.error("Erreur lors de la récupération du profil par email:", err);
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
+
 
 
 module.exports = router;

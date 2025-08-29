@@ -91,7 +91,7 @@ const handleUnauthorized = () => {
           a._id === selectedAmbulancier ? { ...a, statut: 'en mission' } : a
         ),
         ambulances: prev.ambulances.map(a =>
-          a._id === selectedAmbulance ? { ...a, etat: 'en mission' } : a
+          a._id === selectedAmbulance ? { ...a, statut: 'en mission' } : a
         )
       }));
 
@@ -589,7 +589,7 @@ const handleUnauthorized = () => {
             >
               <option value="">Sélectionner une ambulance</option>
               {ressources.ambulances
-                .filter(a => a.etat === 'disponible')
+                .filter(a => a.statut === 'disponible')
                 .map(amb => (
                   <option key={amb._id} value={amb._id}>
                     Ambulance {amb.id} - Type {amb.type}

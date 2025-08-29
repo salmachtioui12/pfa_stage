@@ -219,54 +219,38 @@ const navigate = useNavigate();
            Math.abs(coord.lng) <= 180;
   };
 
-  const calculateRoute = (start, end) => {
-    if (!isValidCoordinate(start) || !isValidCoordinate(end)) {
-      setError("Coordonnées invalides pour le calcul d'itinéraire");
-      return;
+ const calculateRoute = async (start, end) => {
+  if (!isValidCoordinate(start) || !isValidCoordinate(end)) {
+    setError("Coordonnées invalides pour le calcul d'itinéraire");
+    return;
+  }
+
+  setCalculatingRoute(true);
+  setError("");
+  setRoute(null);
+  setDistance(null);
+  setDuration(null);
+
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`;
+    const res = await axios.get(url);
+
+    if (res.data && res.data.routes && res.data.routes.length > 0) {
+      const coords = res.data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+      setRoute(coords);
+      setDistance(`${(res.data.routes[0].distance / 1000).toFixed(1)} km`);
+      setDuration(`${Math.round(res.data.routes[0].duration / 60)} min`);
+    } else {
+      setError("Aucune route trouvée");
     }
+  } catch (err) {
+    console.error("Routing error:", err);
+    setError("Impossible de calculer l'itinéraire. Utilisez Google Maps.");
+  } finally {
+    setCalculatingRoute(false);
+  }
+};
 
-    setCalculatingRoute(true);
-    setError("");
-
-    // Create a temporary map container for routing
-    const mapContainer = document.createElement('div');
-    document.body.appendChild(mapContainer);
-    const map = L.map(mapContainer);
-
-    const routingControl = L.Routing.control({
-      waypoints: [
-        L.latLng(start.lat, start.lng),
-        L.latLng(end.lat, end.lng)
-      ],
-      routeWhileDragging: false,
-      show: false,
-      router: L.Routing.osrmv1({
-        serviceUrl: "https://router.project-osrm.org/route/v1"
-      }),
-      lineOptions: {
-        styles: [{ color: '#3498db', opacity: 0.7, weight: 5 }]
-      }
-    }).addTo(map);
-
-    routingControl.on('routesfound', function(e) {
-      const routes = e.routes;
-      if (routes && routes.length > 0) {
-        const coordinates = routes[0].coordinates.map(coord => [coord.lat, coord.lng]);
-        setRoute(coordinates);
-        setDistance(`${(routes[0].summary.totalDistance / 1000).toFixed(1)} km`);
-        setDuration(`${Math.round(routes[0].summary.totalTime / 60)} min`);
-      }
-      setCalculatingRoute(false);
-      document.body.removeChild(mapContainer);
-    });
-
-    routingControl.on('routingerror', function(error) {
-      console.error("Routing error:", error);
-      setError("Impossible de calculer l'itinéraire automatiquement. Utilisez Google Maps.");
-      setCalculatingRoute(false);
-      document.body.removeChild(mapContainer);
-    });
-  };
 
   const openGoogleMapsNavigation = (start, end) => {
     const url = `https://www.google.com/maps/dir/?api=1&origin=${start.lat},${start.lng}&destination=${end.lat},${end.lng}&travelmode=driving`;
@@ -474,48 +458,49 @@ const handleUnauthorized = () => {
               </div>
             )}
 
-            {(posPatient || posAmbulance || posHopital) && (
-              <div style={styles.mapContainer}>
-                <MapContainer
-                  center={centerMap}
-                  zoom={13}
-                  scrollWheelZoom={true}
-                  style={{ height: "100%", width: "100%", borderRadius: "8px" }}
-                >
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
+          {(posPatient || posAmbulance || posHopital) && (
+  <div style={styles.mapContainer}>
+    <MapContainer
+      center={centerMap}
+      zoom={13}
+      scrollWheelZoom={true}
+      style={{ height: "100%", width: "100%", borderRadius: "8px" }}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
 
-                  {posPatient && (
-                    <Marker position={[posPatient.lat, posPatient.lng]} icon={patientIcon}>
-                      <Popup>Patient: {iv.appelId?.patientName}</Popup>
-                    </Marker>
-                  )}
+      {posPatient && (
+        <Marker position={[posPatient.lat, posPatient.lng]} icon={patientIcon}>
+          <Popup>Patient: {iv.appelId?.patientName}</Popup>
+        </Marker>
+      )}
 
-                  {posAmbulance && (
-                    <Marker position={[posAmbulance.lat, posAmbulance.lng]} icon={ambulanceIcon}>
-                      <Popup>Votre ambulance</Popup>
-                    </Marker>
-                  )}
+      {posAmbulance && (
+        <Marker position={[posAmbulance.lat, posAmbulance.lng]} icon={ambulanceIcon}>
+          <Popup>Votre ambulance</Popup>
+        </Marker>
+      )}
 
-                  {posHopital && (
-                    <Marker position={[posHopital.lat, posHopital.lng]} icon={hopitalIcon}>
-                      <Popup>Hôpital: {iv.hopitalId?.nom}</Popup>
-                    </Marker>
-                  )}
+      {posHopital && (
+        <Marker position={[posHopital.lat, posHopital.lng]} icon={hopitalIcon}>
+          <Popup>Hôpital: {iv.hopitalId?.nom}</Popup>
+        </Marker>
+      )}
 
-                  {route && (
-                    <Polyline 
-                      positions={route} 
-                      color="#3498db" 
-                      weight={5} 
-                      opacity={0.7} 
-                    />
-                  )}
-                </MapContainer>
-              </div>
-            )}
+      {route && (
+        <Polyline 
+          positions={route} 
+          color="#3498db" 
+          weight={5} 
+          opacity={0.7} 
+        />
+      )}
+    </MapContainer>
+  </div>
+)}
+
           </div>
         );
       })}

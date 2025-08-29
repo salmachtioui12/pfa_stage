@@ -233,6 +233,16 @@ const handleUnauthorized = () => {
                   step="0.000001"
                   placeholder="Longitude"
                 />
+                 <div className="form-group">
+              <label htmlFor="osmId">osmId</label>
+              <input
+                type="text"
+                id="osmId"
+                name="osmId"
+                value={profil.osmId}
+                onChange={handleChange}
+              />
+            </div>
               </div>
             </div>
           </div>

@@ -80,7 +80,7 @@ router.post('/', verifyToken, async (req, res) => {
     });
   }
 });
-// ✅ GET toutes les affectations de l’hôpital connecté
+
 // ✅ GET toutes les affectations de l’hôpital connecté
 router.get('/', verifyToken, async (req, res) => {
   try {
