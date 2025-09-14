@@ -106,6 +106,7 @@ Créer un fichier .env dans le dossier backend avec le contenu suivant :
  ```bash
 MONGO_URI=mongodb://localhost:27017/hopitaux
 PORT=3000
+JWT_SECRET=TaSuperCleSecrete
  ```
 
 
@@ -132,6 +133,7 @@ Exemple de fichier .env :
  ```bash
 MONGO_URI=mongodb://localhost:27017/hopitaux
 PORT=3000
+JWT_SECRET=TaSuperCleSecrete
  ```
 ---
 ## 🧪 Comptes de Test
