@@ -68,7 +68,7 @@ async function terminerIntervention(interventionId) {
   if (intervention.ambulanceId) {
     await Ambulance.findByIdAndUpdate(intervention.ambulanceId, {
       etat: 'disponible',
-      statut: 'disponible',
+      //statut: 'disponible',
       destination: null,
     });
   }
